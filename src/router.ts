@@ -17,6 +17,7 @@ import {
   handleCreateCipher, 
   handleUpdateCipher, 
   handleDeleteCipher,
+  handleDeleteCipherCompat,
   handlePermanentDeleteCipher,
   handleRestoreCipher,
   handlePartialUpdateCipher,
@@ -419,7 +420,7 @@ export async function handleRequest(request: Request, env: Env): Promise<Respons
       if (subPath === '' || subPath === '/') {
         if (method === 'GET') return handleGetCipher(request, env, userId, cipherId);
         if (method === 'PUT' || method === 'POST') return handleUpdateCipher(request, env, userId, cipherId);
-        if (method === 'DELETE') return handleDeleteCipher(request, env, userId, cipherId);
+        if (method === 'DELETE') return handleDeleteCipherCompat(request, env, userId, cipherId);
       }
 
       if (subPath === '/delete' && method === 'PUT') {

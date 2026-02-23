@@ -204,6 +204,29 @@ export async function handleDeleteCipher(request: Request, env: Env, userId: str
   return jsonResponse(cipherToResponse(cipher));
 }
 
+// DELETE /api/ciphers/:id (compat mode)
+// Bitwarden clients may call DELETE on a trashed item to purge it permanently.
+// For compatibility:
+// - If item is active -> soft delete.
+// - If item is already soft-deleted -> hard delete.
+export async function handleDeleteCipherCompat(request: Request, env: Env, userId: string, id: string): Promise<Response> {
+  const storage = new StorageService(env.DB);
+  const cipher = await storage.getCipher(id);
+
+  if (!cipher || cipher.userId !== userId) {
+    return errorResponse('Cipher not found', 404);
+  }
+
+  if (cipher.deletedAt) {
+    await deleteAllAttachmentsForCipher(env, id);
+    await storage.deleteCipher(id, userId);
+    await storage.updateRevisionDate(userId);
+    return new Response(null, { status: 204 });
+  }
+
+  return handleDeleteCipher(request, env, userId, id);
+}
+
 // DELETE /api/ciphers/:id (permanent)
 export async function handlePermanentDeleteCipher(request: Request, env: Env, userId: string, id: string): Promise<Response> {
   const storage = new StorageService(env.DB);
